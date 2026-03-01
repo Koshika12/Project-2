@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Student Sign Up</title>
+    <link rel="stylesheet" href="static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+</head>
+<body>
+
+<div class="form-box">
+    <h2>Student Registration</h2>
+ {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    {% for category, message in messages %}
+      <p class="{% if category=='error' %}error-msg{% else %}success-msg{% endif %}">
+          {{ message }}
+      </p>
+    {% endfor %}
+  {% endif %}
+{% endwith %}
+<form method="post" action="{{ url_for('signup') }}">
+
+        <input type="text" name="name" placeholder="Full Name" required>
+
+        <input type="email" name="email" placeholder="Email" required>
+
+       <div class="password-box">
+    <input type="password" name="password" id="password" placeholder="Password" required>
+    <i class="fa-solid fa-eye toggle-password"></i>
+</div>
+
+
+        <input type="text" name="batch" placeholder="Batch (e.g. 2078)" required>
+
+        <select name="department" required>
+            <option value="">Select Department</option>
+            <option>BCA</option>
+            <option>BIM</option>
+            <option>BBS</option>
+            <option>CSIT</option>
+        </select>
+
+        <button type="submit">Sign Up</button>
+    </form>
+
+  <p style="text-align:center;">
+Already registered? <a href="{{ url_for('login') }}">Login</a>
+</p>
+
+</div>
+<script>
+const togglePassword = document.querySelector(".toggle-password");
+const password = document.getElementById("password");
+
+togglePassword.addEventListener("click", function () {
+    // toggle the type attribute
+    const type = password.getAttribute("type") === "password" ? "text" : "password";
+    password.setAttribute("type", type);
+
+    // toggle the eye / eye-slash icon
+    this.classList.toggle("fa-eye");
+    this.classList.toggle("fa-eye-slash");
+});
+</script>
+
+
+</body>
+</html>

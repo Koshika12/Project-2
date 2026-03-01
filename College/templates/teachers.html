@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Teachers - TeachRate</title>
+<style>
+/* ===== Gradient Background ===== */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(-45deg, #1abc9c, #2c3e50, #3498db, #16a085);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+    color: white;
+}
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ===== Navbar ===== */
+.navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 40px; backdrop-filter: blur(15px); background: rgba(255,255,255,0.08); border-bottom: 1px solid rgba(255,255,255,0.2); }
+.logo { font-size: 24px; font-weight: bold; cursor: pointer; }
+.nav-links { list-style: none; display: flex; gap: 20px; align-items: center; }
+.nav-links a { text-decoration: none; color: white; font-weight: 500; position: relative; }
+.nav-links a::after { content: ''; width: 0%; height: 2px; position: absolute; left: 0; bottom: -5px; background: #1abc9c; transition: 0.3s; }
+.nav-links a:hover::after { width: 100%; }
+.profile-icon { width: 40px; border-radius: 50%; cursor: pointer; transition: 0.3s; }
+.profile-icon:hover { transform: scale(1.1); }
+
+/* Dropdown */
+.dropdown-menu { position: absolute; top: 60px; right: 40px; background: white; color: black; border-radius: 10px; overflow: hidden; transform: scale(0.8); opacity: 0; transition: 0.3s; z-index: 100; }
+.dropdown-menu.show { transform: scale(1); opacity: 1; }
+.dropdown-menu a { display: block; padding: 12px 20px; text-decoration: none; color: black; }
+.dropdown-menu a:hover { background: #f1f1f1; }
+
+/* Search Bar */
+.search-box { display: flex; justify-content: center; margin: 20px 0; }
+.search-box input { padding: 12px 20px; border: none; border-radius: 30px; width: 300px; outline: none; }
+.search-box button { padding: 12px 20px; border: none; border-radius: 30px; background: #2c3e50; color: white; margin-left: 10px; cursor: pointer; transition: 0.3s; }
+.search-box button:hover { background: #1abc9c; }
+
+/* Main Layout */
+.container { 
+    display: grid; 
+    grid-template-columns: 200px 1fr;  /* sidebar fixed width, main area flexible */
+    gap: 20px; 
+    padding: 20px 40px; 
+    max-width: 1200px; 
+    margin: auto; 
+    align-items: start; /* ensures sidebar stays at top */
+}
+
+/* Sidebar for Sorting */
+.sidebar { background: rgba(255,255,255,0.08); padding: 20px; border-radius: 15px; backdrop-filter: blur(10px); }
+.sidebar h3 { margin-top: 0; margin-bottom: 10px; }
+.sidebar button { width: 100%; padding: 10px; margin-bottom: 10px; border: none; border-radius: 20px; background: #16a085; color: white; cursor: pointer; transition: 0.3s; }
+.sidebar button.active { background: #1abc9c; }
+.sidebar button:hover { background: #1abc9c; }
+
+/* Teacher Cards */
+.main-area { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+.school-card { background: rgba(255,255,255,0.06); padding: 15px; border-radius: 12px; text-align: center; transition: 0.3s; position: relative; }
+.school-card:hover { transform: translateY(-5px); }
+.school-card img { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; margin-bottom: 10px; border: 2px solid #1abc9c; }
+.school-card h3 { margin: 5px 0; font-size: 16px; }
+.school-card p { margin: 5px 0; font-size: 14px; }
+.school-card button { margin-top: 5px; padding: 6px 12px; border:none; border-radius:15px; background:#1abc9c; color:white; cursor:pointer; transition:0.3s; }
+.school-card button:hover { background:#16a085; }
+
+/* Details Slider */
+.details-panel { background: rgba(255,255,255,0.08); border-radius: 12px; margin-top:10px; padding: 10px; display: none; text-align: left; animation: slideDown 0.3s ease forwards; }
+@keyframes slideDown { from { opacity:0; transform: translateY(-10px);} to { opacity:1; transform: translateY(0);} }
+.details-panel p { margin: 5px 0; }
+
+/* Give Review & Close Buttons */
+.details-panel .btn { padding:8px 15px; border:none; border-radius:15px; cursor:pointer; margin-right:5px; }
+.details-panel .btn.review { background:#1abc9c; color:white; }
+.details-panel .btn.close { background:#e74c3c; color:white; }
+
+/* Footer */
+footer { text-align: center; padding: 20px; color: white; margin-top: 50px; }
+
+/* Responsive */
+@media(max-width: 900px) { .container { grid-template-columns: 1fr; } .sidebar { display: flex; justify-content: center; margin-bottom: 20px; } }
+</style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo" onclick="window.location.href='{{ url_for('dashboard') }}'">TeachRate</div>
+    <ul class="nav-links">
+        <li><a href="{{ url_for('teachers') }}">Teachers</a></li>
+        <li><a href="{{ url_for('review') }}">Reviews</a></li>
+        <li><a href="#">History</a></li>
+        <li><img src="{{ url_for('static', filename='profile.png') }}" class="profile-icon" onclick="toggleDropdown()"></li>
+    </ul>
+</nav>
+
+<!-- Dropdown -->
+<div id="profileDropdown" class="dropdown-menu">
+   <a href="{{ url_for('logout') }}">Logout</a>
+</div>
+
+<!-- Search Bar -->
+<div class="search-box">
+    <input type="text" id="searchInput" placeholder="Search teacher...">
+    <button onclick="filterTeachers()">Search</button>
+</div>
+
+<!-- Main Content -->
+<div class="container">
+
+    <!-- Left Sidebar -->
+    <div class="sidebar">
+        <h3>Sort Teachers</h3>
+        <button onclick="sortTeachers('alphabet')" id="btnAlphabet">Alphabetically</button>
+        <button onclick="sortTeachers('highest')" id="btnHighest">Highest Reviews</button>
+        <button onclick="sortTeachers('lowest')" id="btnLowest">Lowest Reviews</button>
+        <button onclick="sortTeachers('average')" id="btnAverage">Average Rating</button>
+    </div>
+
+    <!-- Right Main Area -->
+    <div class="main-area" id="teacherContainer">
+      {% for t in teachers %}
+<div class="school-card" data-name="{{ t.name }}" data-reviews="{{ t.reviews_count }}" data-rating="{{ t.avg_rating }}">
+    <img src="{{ url_for('static', filename='images/' ~ t.image_url) }}" alt="{{ t.name }}">
+    <h3>{{ t.name }}</h3>
+    <p>{{ t.department }}</p>
+    <p>⭐⭐⭐⭐⭐ | {{ t.reviews_count }} Reviews | Avg: {{ t.avg_rating }}</p>
+    <button onclick="toggleDetails(this)">View Details</button>
+
+    <!-- Sliding Details Panel -->
+    <div class="details-panel">
+        <p><strong>Department:</strong> {{ t.department }}</p>
+        <p><strong>Average Rating:</strong> {{ t.avg_rating }}</p>
+        <p><strong>Reviews:</strong> {{ t.reviews_count }}</p>
+        <p><strong>About:</strong> {{ t.admin_review }}</p>
+        <button class="btn review" onclick="window.location.href='/review?teacher_id={{ t.id }}'">Give Your Review</button>
+        <button class="btn close" onclick="closeDetails(this)">Close</button>
+    </div>
+</div>
+{% endfor %}
+    </div>
+
+</div>
+
+<footer>© 2026 TeachRate | All Rights Reserved</footer>
+
+<script>
+/* Dropdown */
+function toggleDropdown() { document.getElementById("profileDropdown").classList.toggle("show"); }
+window.onclick = function(event) {
+    if (!event.target.matches('.profile-icon')) {
+        document.getElementById("profileDropdown").classList.remove('show');
+    }
+}
+
+/* Search Filter */
+function filterTeachers(){
+    const filter = document.getElementById('searchInput').value.toLowerCase();
+    const cards = document.getElementById('teacherContainer').getElementsByClassName('school-card');
+    for(let card of cards){
+        const name = card.dataset.name.toLowerCase();
+        card.style.display = name.includes(filter) ? 'block' : 'none';
+    }
+}
+
+/* Sorting */
+function sortTeachers(type){
+    const container = document.getElementById('teacherContainer');
+    const cards = Array.from(container.getElementsByClassName('school-card'));
+    document.querySelectorAll('.sidebar button').forEach(btn => btn.classList.remove('active'));
+    if(type==='alphabet') document.getElementById('btnAlphabet').classList.add('active');
+    if(type==='highest') document.getElementById('btnHighest').classList.add('active');
+    if(type==='lowest') document.getElementById('btnLowest').classList.add('active');
+    if(type==='average') document.getElementById('btnAverage').classList.add('active');
+
+    cards.sort((a,b)=>{
+        if(type==='alphabet') return a.dataset.name.localeCompare(b.dataset.name);
+        if(type==='highest') return b.dataset.reviews - a.dataset.reviews;
+        if(type==='lowest') return a.dataset.reviews - b.dataset.reviews;
+        if(type==='average') return b.dataset.rating - a.dataset.rating;
+    });
+    cards.forEach(card=>container.appendChild(card));
+}
+
+/* Slide Details Panel */
+function toggleDetails(btn){
+    const panel = btn.nextElementSibling;
+    if(panel.style.display === 'block'){
+        panel.style.display = 'none';
+    } else {
+        // Close other panels
+        document.querySelectorAll('.details-panel').forEach(p=>p.style.display='none');
+        panel.style.display = 'block';
+    }
+}
+function closeDetails(btn){
+    btn.parentElement.style.display='none';
+}
+</script>
+
+</body>
+</html>
