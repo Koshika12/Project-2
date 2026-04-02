@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Admin Login</title>
+
+<style>
+/* ===== BACKGROUND ===== */
+body{
+    margin:0;
+    font-family:'Segoe UI',sans-serif;
+    height:100vh;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    background: radial-gradient(circle at top left,#667eea,#764ba2,#0f2027);
+    color:white;
+}
+
+/* ===== GLASS CARD ===== */
+.form-box{
+    width:350px;
+    padding:40px;
+    border-radius:20px;
+    background:rgba(255,255,255,0.08);
+    backdrop-filter:blur(18px);
+    box-shadow:0 0 30px rgba(0,0,0,0.3);
+    text-align:center;
+}
+
+/* ===== INPUT ===== */
+.input-group{
+    position:relative;
+}
+
+input{
+    width:100%;
+    padding:12px;
+    margin:10px 0;
+    border:none;
+    border-radius:8px;
+    outline:none;
+}
+
+/* ===== EYE ICON ===== */
+.eye{
+    position:absolute;
+    right:12px;        /* adjust closer to edge */
+    top:50%;
+    transform:translateY(-50%);
+    cursor:pointer;
+    color:#333;
+    z-index:10;        /* make sure it's on top */
+    font-size:18px;    /* bigger click area */
+    user-select:none;  /* prevent accidental text selection */
+}
+
+/* ===== BUTTON ===== */
+button{
+    width:100%;
+    padding:12px;
+    border:none;
+    border-radius:8px;
+    background:#667eea;
+    color:white;
+    font-size:16px;
+    cursor:pointer;
+    transition:0.3s;
+}
+
+button:hover{
+    background:#5a67d8;
+}
+
+a{
+    color:#ddd;
+    text-decoration:none;
+}
+</style>
+</head>
+
+<body>
+
+<div class="form-box">
+
+<h2>Admin Login</h2>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+{% if messages %}
+{% for category, message in messages %}
+<p style="color:#ffd369">{{ message }}</p>
+{% endfor %}
+{% endif %}
+{% endwith %}
+
+<form method="POST">
+
+<input type="email" name="email" placeholder="Email" required>
+
+<div class="input-group">
+<input type="password" name="password" id="password" placeholder="Password" required>
+<span class="eye" onclick="togglePassword()">👁</span>
+</div>
+
+<button type="submit">Login</button>
+</form>
+
+<p style="margin-top:15px;">
+No account? <a href="/admin/signup">Create Admin</a>
+</p>
+
+</div>
+
+<script>
+function togglePassword(){
+    let pass = document.getElementById("password");
+    pass.type = (pass.type === "password") ? "text" : "password";
+}
+</script>
+
+</body>
+</html>
