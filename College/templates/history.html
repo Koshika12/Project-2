@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Your Reviews - TeachRate</title>
+
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+<style>
+
+/* ===== Gradient Background ===== */
+body {
+    margin: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: linear-gradient(-45deg, #1abc9c, #2c3e50, #3498db, #16a085);
+    background-size: 400% 400%;
+    animation: gradientBG 12s ease infinite;
+    color: white;
+
+    /* IMPORTANT FOR FOOTER */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* ===== Navbar ===== */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 40px;
+    backdrop-filter: blur(15px);
+    background: rgba(255,255,255,0.08);
+    border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+.logo { font-size: 24px; font-weight: bold; cursor: pointer; }
+.nav-links { list-style: none; display: flex; gap: 20px; align-items: center; }
+.nav-links a { text-decoration: none; color: white; position: relative; }
+.nav-links a::after {
+    content: '';
+    width: 0%;
+    height: 2px;
+    position: absolute;
+    left: 0;
+    bottom: -5px;
+    background: #1abc9c;
+    transition: 0.3s;
+}
+.nav-links a:hover::after { width: 100%; }
+.profile-icon { width: 40px; border-radius: 50%; cursor: pointer; }
+
+/* Dropdown */
+.dropdown-menu {
+    position: absolute;
+    top: 60px;
+    right: 40px;
+    background: white;
+    color: black;
+    border-radius: 10px;
+    opacity: 0;
+    transform: scale(0.8);
+    transition: 0.3s;
+}
+.dropdown-menu.show { opacity: 1; transform: scale(1); }
+.dropdown-menu a { display: block; padding: 12px 20px; text-decoration: none; color: black; }
+
+/* ===== Layout ===== */
+.container {
+    display: grid;
+    grid-template-columns: 200px 1fr;
+    gap: 20px;
+    padding: 20px 40px;
+
+    flex: 1; /* pushes footer down */
+}
+
+/* Sidebar */
+.sidebar {
+    background: rgba(255,255,255,0.08);
+    padding: 20px;
+    border-radius: 15px;
+}
+.sidebar h3 { margin-bottom: 10px; }
+.sidebar button {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    background: #16a085;
+    color: white;
+    cursor: default;
+}
+
+/* ===== Table ===== */
+.table-wrapper { overflow-x: auto; }
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: rgba(255,255,255,0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 25px rgba(0,0,0,0.4);
+    backdrop-filter: blur(8px);
+}
+th, td { padding: 12px 15px; text-align: left; color: #fff; }
+th {
+    background: rgba(0,0,0,0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    font-weight: 600;
+}
+tr:nth-child(even) { background: rgba(255,255,255,0.05); }
+tr:hover { background: rgba(26, 188, 156, 0.3); transition: 0.3s; }
+
+.no-history { text-align: center; padding: 30px; font-size: 18px; color: #ccc; }
+
+/* ===== FOOTER ===== */
+.footer {
+    background: rgba(0,0,0,0.3);
+    backdrop-filter: blur(10px);
+    padding: 40px 20px 20px;
+    margin-top: auto;
+}
+
+.footer-content {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    max-width: 1100px;
+    margin: auto;
+    gap: 30px;
+}
+
+.footer-links, .footer-social {
+    display: flex;
+    flex-direction: column;
+}
+
+.footer-links a,
+.footer-social a {
+    text-decoration: none;
+    color: white;
+    margin: 5px 0;
+    transition: 0.3s;
+}
+
+.footer-links a:hover,
+.footer-social a:hover {
+    color: #1abc9c;
+}
+
+.footer-bottom {
+    text-align: center;
+    margin-top: 20px;
+    font-size: 14px;
+    opacity: 0.8;
+}
+
+</style>
+</head>
+
+<body>
+
+<!-- Navbar -->
+<nav class="navbar">
+    <div class="logo" onclick="window.location.href='{{ url_for('dashboard') }}'">TeachRate</div>
+    <ul class="nav-links">
+        <li><a href="{{ url_for('teachers') }}">Teachers</a></li>
+        <li><a href="{{ url_for('review') }}"> Reviews</a></li>
+        <li><a href="{{ url_for('history') }}">History</a></li>
+        <li>
+            <img src="{{ url_for('static', filename='profile.png') }}" class="profile-icon" onclick="toggleDropdown()">
+        </li>
+    </ul>
+</nav>
+
+<div id="profileDropdown" class="dropdown-menu">
+    <a href="{{ url_for('logout') }}">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="container">
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+        <h3>Sort Reviews</h3>
+        <button>Alphabetically</button>
+        <button>Highest Rating</button>
+        <button>Lowest Rating</button>
+    </div>
+
+    <!-- Table -->
+    <div class="main-area">
+        {% if reviews %}
+        <div class="table-wrapper">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Teacher Name</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td>{{ review.teacher_name }}</td>
+                        <td>{{ review.rating }}/5</td>
+                        <td>{{ review.review_text }}</td>
+                        <td>{{ review.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="no-history">You haven't submitted any reviews yet.</p>
+        {% endif %}
+    </div>
+
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="footer-content">
+
+        <!-- Left -->
+        <div>
+            <h2>TeachRate</h2>
+            <p>Helping students choose better teachers.</p>
+        </div>
+
+        <!-- Links -->
+        <div class="footer-links">
+            <h3>Quick Links</h3>
+            <a href="{{ url_for('dashboard') }}">Home</a>
+            <a href="{{ url_for('teachers') }}">Teachers</a>
+            <a href="{{ url_for('review') }}">Reviews</a>
+            <a href="{{ url_for('history') }}">History</a>
+        </div>
+
+        <!-- Social -->
+        <div class="footer-social">
+            <h3>Follow Us</h3>
+            <a href="#"><i class="fab fa-facebook"></i> Facebook</a>
+            <a href="#"><i class="fab fa-instagram"></i> Instagram</a>
+            <a href="#"><i class="fab fa-twitter"></i> Twitter</a>
+        </div>
+
+    </div>
+
+    <div class="footer-bottom">
+        © 2026 TeachRate | All Rights Reserved
+    </div>
+</footer>
+
+<script>
+function toggleDropdown() {
+    document.getElementById("profileDropdown").classList.toggle("show");
+}
+</script>
+
+</body>
+</html>
