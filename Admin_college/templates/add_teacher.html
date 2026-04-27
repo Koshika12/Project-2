@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Teacher - Admin Dashboard</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+        }
+
+        body {
+            display: flex;
+            min-height: 100vh;
+            background: #f4f6f9;
+        }
+
+        /* ===== LEFT SIDEBAR ===== */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1abc9c, #16a085);
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            height: 100%;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 1px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 14px 25px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+            font-size: 15px;
+        }
+
+        /* Smooth hover slide effect */
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.15);
+            padding-left: 35px;
+        }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            margin-left: 240px; /* same as sidebar width */
+            width: calc(100% - 240px);
+            padding: 25px;
+            display: flex;
+            justify-content: center;
+        }
+
+        /* ===== FORM CARD ===== */
+        .form-card {
+            background: white;
+            padding: 40px 30px;
+            border-radius: 15px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .form-card h2 {
+            text-align: center;
+            margin-bottom: 15px;
+            font-weight: 700;
+            color: #333;
+        }
+
+        form {
+            display: grid;
+            gap: 15px;
+        }
+
+        input, select, textarea {
+            padding: 12px 15px;
+            border-radius: 8px;
+            border: 1px solid #ccc;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        input[type="file"] {
+            padding: 6px;
+        }
+
+        button {
+            background-color: #1abc9c;
+            color: white;
+            padding: 14px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        button:hover {
+            background-color: #16a085;
+        }
+
+        .flash-msg {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px 15px;
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 10px;
+            display: block;
+            color: #1abc9c;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        @media(max-width:768px){
+            .sidebar { width: 200px; }
+            .main { margin-left: 200px; width: calc(100% - 200px); padding: 15px; }
+            .form-card { padding: 25px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar">
+        <h2>ADMIN</h2>
+        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('add_teacher') }}">Add Teacher</a>
+        <a href="{{url_for('admin_review')}}">Student Reviews</a>
+        <a href="{{ url_for('teacher_status') }}">Teacher Status</a>
+        <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main">
+        <div class="form-card">
+            <h2>Add Teacher</h2>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash-msg">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="POST" enctype="multipart/form-data">
+                <input type="text" name="name" placeholder="Teacher Name" required>
+
+                <select name="department" required>
+                    <option value="" disabled selected>Select Department</option>
+                    <option value="BCA">BCA</option>
+                    <option value="BIM">BIM</option>
+                    <option value="BBS">BBS</option>
+                    <option value="CSIT">CSIT</option>
+                </select>
+
+                <input type="number" name="experience" placeholder="Years of Teaching Experience" min="0" required>
+                <input type="file" name="image_file" accept="image/*" required>
+                <textarea name="admin_review" placeholder="Write a review/description for students" rows="4"></textarea>
+
+                <button type="submit">Add Teacher</button>
+            </form>
+
+            <a class="back-link" href="{{ url_for('admin_dashboard') }}">Back to Dashboard</a>
+        </div>
+    </div>
+
+</body>
+</html>

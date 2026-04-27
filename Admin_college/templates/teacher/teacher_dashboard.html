@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Dashboard</title>
+
+    <style>
+        body {
+            font-family: Arial;
+            margin: 0;
+            background: #f4f6f9;
+        }
+
+        /* HEADER */
+        .header {
+            background: #28a745;
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h2 {
+            margin: 0;
+        }
+
+        .logout-btn {
+            background: white;
+            color: #28a745;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .logout-btn:hover {
+            background: #e6e6e6;
+        }
+
+        /* CONTAINER */
+        .container {
+            padding: 20px;
+        }
+
+        /* PROFILE CARD */
+        .profile-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .profile-card p {
+            margin: 6px 0;
+        }
+
+        /* REVIEWS */
+        .reviews-title {
+            margin-bottom: 10px;
+        }
+
+        .review-card {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+        }
+
+        .review-card p {
+            margin: 5px 0;
+        }
+
+        .rating {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .date {
+            font-size: 12px;
+            color: gray;
+        }
+
+        .no-review {
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+    <h2>Welcome ,{{ teacher.name }}</h2>
+    <a href="/teacher/logout">
+        <button class="logout-btn">Logout</button>
+    </a>
+</div>
+
+<div class="container">
+
+    <!-- PROFILE -->
+    <div class="profile-card">
+        <p><b>Department:</b> {{ teacher.department }}</p>
+        <p><b>Experience:</b> {{ teacher.experience }} years</p>
+        <p><b>Status:</b> {{ teacher.status }}</p>
+    </div>
+
+    <hr>
+
+    <!-- REVIEWS -->
+    <h3 class="reviews-title">Student Reviews</h3>
+
+    {% if reviews %}
+        {% for r in reviews %}
+            <div class="review-card">
+                <p><b>{{ r.student_name }}</b></p>
+                <p><b>Department:</b> {{ r.student_department }}</p>
+                <p class="rating">⭐ {{ r.rating }}/5</p>
+                <p>{{ r.review_text }}</p>
+                <p class="date">{{ r.created_at }}</p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="no-review">
+            No reviews yet
+        </div>
+    {% endif %}
+
+</div>
+
+</body>
+</html>

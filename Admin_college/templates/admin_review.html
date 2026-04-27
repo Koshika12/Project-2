@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Admin - Reviews</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, sans-serif; }
+
+        body { display: flex; min-height: 100vh; background: #f4f6f9; }
+
+        /* ===== SIDEBAR ===== */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1abc9c, #16a085);
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+            height: 100%;
+        }
+        .sidebar h2 { text-align: center; margin-bottom: 30px; letter-spacing: 1px; }
+        .sidebar a {
+            display: block;
+            padding: 14px 25px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+            font-size: 15px;
+        }
+        .sidebar a:hover { background: rgba(255,255,255,0.15); padding-left: 35px; }
+
+        /* ===== MAIN CONTENT ===== */
+        .main {
+            margin-left: 240px;
+            width: calc(100% - 240px);
+            padding: 25px;
+        }
+
+        /* ===== HEADER ===== */
+        .topbar {
+            background: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        .topbar h1 { font-size: 22px; color: #333; }
+        .admin-profile { font-size: 14px; color: #555; }
+
+        /* ===== SEARCH FORM ===== */
+        .search-form {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .search-form input[type="text"] {
+            flex: 1;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+        .search-form button {
+            padding: 8px 16px;
+            border: none;
+            background: #1abc9c;
+            color: white;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .search-form button:hover { background: #16a085; }
+
+        /* ===== REVIEWS TABLE ===== */
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px; border-bottom: 1px solid #ddd; text-align: left; }
+        th { background: #1abc9c; color: #fff; }
+        tr:hover { background: #f1f1f1; }
+
+        .btn-danger {
+            background: #e74c3c;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn-danger:hover { background: #c0392b; }
+
+        .flash { padding: 10px; margin-bottom: 15px; border-radius: 5px; }
+        .flash.success { background: #2ecc71; color: #fff; }
+        .flash.error { background: #e74c3c; color: #fff; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== SIDEBAR ===== -->
+    <div class="sidebar">
+        <h2>ADMIN</h2>
+        <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+        <a href="{{ url_for('add_teacher') }}">Add Teacher</a>
+        <a href="{{ url_for('admin_review') }}">Student Reviews</a>
+        <a href="{{ url_for('teacher_status') }}">Teacher Status</a>
+        <a href="{{ url_for('admin_logout') }}">Logout</a>
+    </div>
+
+    <!-- ===== MAIN CONTENT ===== -->
+    <div class="main">
+        <div class="topbar">
+            <h1>Student Reviews</h1>
+            <div class="admin-profile"></div>
+        </div>
+
+        <div class="container">
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                    <div class="flash {{ category }}">{{ message }}</div>
+                {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <!-- ===== SEARCH FORM ===== -->
+            <form class="search-form" method="get" action="{{ url_for('admin_review') }}">
+                <input type="text" name="query" placeholder="Search by teacher name..." value="{{ query }}">
+                <button type="submit"><i class="fa fa-search"></i> Search</button>
+            </form>
+
+            <!-- ===== REVIEWS TABLE ===== -->
+            <table>
+                <thead>
+                    <tr>
+                        <th>Student Name</th>
+                        <th>Teacher Name</th>
+                        <th>Rating</th>
+                        <th>Review</th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for review in reviews %}
+                    <tr>
+                        <td>{{ review.student_name }}</td>
+                        <td>{{ review.teacher_name }}</td>
+                        <td>{{ review.rating }}</td>
+                        <td>{{ review.review_text }}</td>
+                        <td>{{ review.created_at.strftime("%Y-%m-%d %H:%M") if review.created_at else "" }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="5" style="text-align:center;">No reviews found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</body>
+</html>

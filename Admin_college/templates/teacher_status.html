@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Status</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            display: flex;
+            background: #f4f6f9;
+        }
+
+        /* SIDEBAR (same as dashboard) */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1abc9c, #16a085);
+            height: 100vh;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 14px 20px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.15);
+            padding-left: 30px;
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: 240px;
+            padding: 25px;
+            width: 100%;
+        }
+
+        .main h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        /* CARD */
+        .card {
+            background: white;
+            padding: 15px 20px;
+            margin-bottom: 12px;
+            border-radius: 12px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-3px);
+        }
+
+        .card a {
+            text-decoration: none;
+            font-weight: bold;
+            color: #1abc9c;
+            font-size: 16px;
+        }
+
+        .card a:hover {
+            color: #16a085;
+        }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>ADMIN</h2>
+    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('add_teacher') }}">Add Teacher</a>
+    <a href="{{ url_for('admin_review') }}">Student Reviews</a>
+    <a href="{{ url_for('teacher_status') }}">Teacher Status</a>
+    <a href="{{ url_for('admin_logout') }}">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+    <h2>Teacher Status List</h2>
+
+    {% for t in teachers %}
+   <div class="card">
+
+    <a href="{{ url_for('teacher_profile', id=t.id) }}"
+       style="{% if t.status == 'inactive' %}color:red;{% else %}color:#1abc9c;{% endif %}">
+
+        {{ t.name }}
+
+    </a>
+
+    {% if t.status == 'inactive' %}
+        <small style="color:red; font-weight:bold;">(Inactive)</small>
+    {% endif %}
+
+</div>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

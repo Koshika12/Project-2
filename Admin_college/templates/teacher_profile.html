@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teacher Profile</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            background: #f4f6f9;
+        }
+
+        /* SIDEBAR (same as dashboard) */
+        .sidebar {
+            width: 240px;
+            background: linear-gradient(180deg, #1abc9c, #16a085);
+            height: 100vh;
+            color: white;
+            padding-top: 20px;
+            position: fixed;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .sidebar a {
+            display: block;
+            padding: 14px 20px;
+            color: white;
+            text-decoration: none;
+            transition: 0.3s;
+        }
+
+        .sidebar a:hover {
+            background: rgba(255,255,255,0.15);
+            padding-left: 30px;
+        }
+
+        /* MAIN */
+        .main {
+            margin-left: 240px;
+            width: 100%;
+            padding: 30px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* CARD */
+        .card {
+            background: white;
+            width: 350px;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: 0.3s;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+        }
+
+        img {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            margin-bottom: 15px;
+            transition: 0.3s;
+        }
+
+        .inactive img {
+            filter: grayscale(100%);
+        }
+
+        .inactive h2 {
+            color: red;
+            text-decoration: underline;
+        }
+
+        h2 {
+            margin-bottom: 10px;
+        }
+
+        p {
+            margin-bottom: 15px;
+            color: #555;
+        }
+
+        .btn {
+            padding: 10px 15px;
+            margin: 5px;
+            display: inline-block;
+            color: white;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+        }
+
+        .active-btn { background: green; }
+        .inactive-btn { background: red; }
+    </style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+    <h2>ADMIN</h2>
+    <a href="{{ url_for('admin_dashboard') }}">Dashboard</a>
+    <a href="{{ url_for('add_teacher') }}">Add Teacher</a>
+    <a href="{{ url_for('admin_review') }}">Student Reviews</a>
+    <a href="{{ url_for('teacher_status') }}">Teacher Status</a>
+    <a href="{{ url_for('admin_logout') }}">Logout</a>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+{% if teacher %}
+
+<div class="card {% if teacher.status == 'inactive' %}inactive{% endif %}">
+
+ <img src="{{ url_for('static', filename='images/' ~ teacher.image_url) }}">
+
+    <h2>{{ teacher.name }}</h2>
+
+    <p><b>Status:</b> {{ teacher.status }}</p>
+
+    <a class="btn active-btn"
+       href="/admin/teacher/{{ teacher.id }}/status/active">
+       Active
+    </a>
+
+    <a class="btn inactive-btn"
+       href="/admin/teacher/{{ teacher.id }}/status/inactive">
+       Inactive
+    </a>
+
+</div>
+
+{% else %}
+
+<p>No teacher found</p>
+
+{% endif %}
+
+</div>
+
+</body>
+</html>
