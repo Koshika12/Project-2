@@ -93,6 +93,7 @@ def login():
 # ===================== DASHBOARD =====================
 @app.route('/dashboard', methods=['GET'])
 def dashboard():
+
     if 'student_id' not in session:
         return redirect('/login')
 
@@ -115,6 +116,7 @@ def dashboard():
     cursor.close()
     db.close()
 
+    # ---------------- GROUPING ----------------
     teachers_dict = {}
 
     for row in data:
@@ -137,45 +139,50 @@ def dashboard():
             teachers_dict[tid]['reviews'].append(row['rating'])
 
     # ---------------- CALCULATE RATINGS ----------------
-    for t in teachers_dict.values():
-        if t['reviews']:
-            t['reviews_count'] = len(t['reviews'])
-            t['avg_rating'] = round(sum(t['reviews']) / len(t['reviews']), 1)
+    teacher_list = list(teachers_dict.values())
+
+    for t in teacher_list:
+        reviews = t['reviews']
+        n = len(reviews)
+
+        t['reviews_count'] = n
+
+        if n > 0:
+            t['avg_rating'] = round(sum(reviews) / n, 1)
         else:
-            t['reviews_count'] = 0
             t['avg_rating'] = 0
 
-    all_teachers = list(teachers_dict.values())
-
-    # 🔍 SEARCH (O(n))
+    # ---------------- SEARCH FILTER ----------------
     if search_term:
-        all_teachers = [
-            t for t in all_teachers
+        teacher_list = [
+            t for t in teacher_list
             if search_term in t['name'].lower()
             or search_term in t['department'].lower()
         ]
 
-    # 🔢 BUBBLE SORT (O(n²))
-    n = len(all_teachers)
+    # ---------------- SORTING (BUBBLE SORT) ----------------
+    n = len(teacher_list)
+
     for i in range(n):
-        for j in range(0, n - i - 1):
-            a, b = all_teachers[j], all_teachers[j + 1]
+        for j in range(n - i - 1):
 
-            if sort_by == 'alphabet' and a['name'] > b['name']:
-                all_teachers[j], all_teachers[j + 1] = b, a
+            a = teacher_list[j]
+            b = teacher_list[j + 1]
 
-            elif sort_by == 'highest' and a['avg_rating'] < b['avg_rating']:
-                all_teachers[j], all_teachers[j + 1] = b, a
+            if (
+                (sort_by == 'alphabet' and a['name'] > b['name']) or
+                (sort_by == 'highest' and a['avg_rating'] < b['avg_rating']) or
+                (sort_by == 'lowest' and a['avg_rating'] > b['avg_rating']) or
+                (sort_by == 'experience' and a['experience'] < b['experience'])
+            ):
+                teacher_list[j], teacher_list[j + 1] = b, a
 
-            elif sort_by == 'lowest' and a['avg_rating'] > b['avg_rating']:
-                all_teachers[j], all_teachers[j + 1] = b, a
+    # ---------------- TOP TEACHERS ----------------
+    top_teachers = [t for t in teacher_list if t['avg_rating'] >= 3]
 
-            elif sort_by == 'experience' and a['experience'] < b['experience']:
-                all_teachers[j], all_teachers[j + 1] = b, a
+    # ---------------- NORMALIZATION ----------------
+    for t in teacher_list:
 
-    top_teachers = [t for t in all_teachers if t['avg_rating'] >= 3]
-
-    for t in all_teachers:
         if not t['image_url'] or not os.path.isfile(
             os.path.join(app.root_path, 'static', 'images', t['image_url'])
         ):
@@ -184,10 +191,18 @@ def dashboard():
         if not t['admin_review'] or t['admin_review'].strip() == "":
             t['admin_review'] = "No description available."
 
-    total_teachers = len(all_teachers)
-    total_reviews = sum(t['reviews_count'] for t in all_teachers)
-    avg_rating_all = sum(t['avg_rating'] for t in all_teachers if t['reviews_count'] > 0)
-    avg_rating = round(avg_rating_all / total_teachers, 1) if total_teachers > 0 else 0
+    # ---------------- METRICS ----------------
+    total_teachers = len(teacher_list)
+
+    total_reviews = sum(t['reviews_count'] for t in teacher_list)
+
+    avg_rating = (
+        round(
+            sum(t['avg_rating'] for t in teacher_list if t['reviews_count'] > 0)
+            / total_teachers, 1
+        )
+        if total_teachers > 0 else 0
+    )
 
     return render_template(
         'dashboard.html',
@@ -195,21 +210,23 @@ def dashboard():
         total_reviews=total_reviews,
         avg_rating=avg_rating,
         top_teachers=top_teachers,
-        all_teachers=all_teachers,
+        all_teachers=teacher_list,
         search_term=search_term,
         sort_by=sort_by
     )
 
-
 # ===================== TEACHERS LIST =====================
 @app.route('/teachers')
 def teachers():
+
+    # ---------------- INPUT CONDITION ----------------
     if 'student_id' not in session:
         return redirect('/login')
 
     search_term = request.args.get('search', '').strip().lower()
     sort_by = request.args.get('sort', 'highest')
 
+    # ---------------- DATA COLLECTION ----------------
     db = get_db()
     cursor = db.cursor(dictionary=True)
 
@@ -223,17 +240,20 @@ def teachers():
         ORDER BY t.id DESC
     """)
 
-    data = cursor.fetchall()
+    D = cursor.fetchall()
     cursor.close()
     db.close()
 
-    teachers_dict = {}
+    # ---------------- GROUPING ----------------
+    M = {}
 
-    for row in data:
+    for row in D:
+
         tid = row['id']
 
-        if tid not in teachers_dict:
-            teachers_dict[tid] = {
+        # FIX: ∉ → not in
+        if tid not in M:
+            M[tid] = {
                 'id': tid,
                 'name': row['name'],
                 'department': row['department'],
@@ -246,37 +266,53 @@ def teachers():
                 'reviews_count': 0
             }
 
-        teachers_dict[tid]['status'] = row['status']
-
         if row['rating'] is not None:
-            teachers_dict[tid]['reviews'].append(row['rating'])
+            M[tid]['reviews'].append(row['rating'])
 
-    teacher_list = list(teachers_dict.values())
+    # ---------------- AVERAGE RATING ----------------
+    L = list(M.values())
 
-    for t in teacher_list:
-        if t['reviews']:
-            t['reviews_count'] = len(t['reviews'])
-            t['avg_rating'] = round(sum(t['reviews']) / len(t['reviews']), 1)
+    for t in L:
+
+        R = t['reviews']
+        n = len(R)
+
+        t['reviews_count'] = n
+
+        if n > 0:
+            t['avg_rating'] = round(sum(R) / n, 1)
         else:
-            t['reviews_count'] = 0
             t['avg_rating'] = 0
 
-    # 🔢 SORT
-    n = len(teacher_list)
+    # ---------------- SEARCH FILTER ----------------
+    if search_term:
+        L = [
+            t for t in L
+            if search_term in t['name'].lower()
+            or search_term in t['department'].lower()
+        ]
+
+    # ---------------- SORTING (BUBBLE SORT) ----------------
+    n = len(L)
+
     for i in range(n):
-        for j in range(0, n - i - 1):
-            a, b = teacher_list[j], teacher_list[j + 1]
+        for j in range(n - i - 1):
 
-            if sort_by == 'alphabet' and a['name'] > b['name']:
-                teacher_list[j], teacher_list[j + 1] = b, a
+            a = L[j]
+            b = L[j + 1]
 
-            elif sort_by == 'highest' and a['avg_rating'] < b['avg_rating']:
-                teacher_list[j], teacher_list[j + 1] = b, a
+            # FIXED LOGIC (Python form)
+            C = (
+                (sort_by == 'alphabet' and a['name'] > b['name']) or
+                (sort_by == 'highest' and a['avg_rating'] < b['avg_rating']) or
+                (sort_by == 'lowest' and a['avg_rating'] > b['avg_rating'])
+            )
 
-            elif sort_by == 'lowest' and a['avg_rating'] > b['avg_rating']:
-                teacher_list[j], teacher_list[j + 1] = b, a
+            if C:
+                L[j], L[j + 1] = b, a
 
-    return render_template('teachers.html', teachers=teacher_list)
+    # ---------------- OUTPUT ----------------
+    return render_template('teachers.html', teachers=L)
 
 
 # ===================== LOGOUT =====================
