@@ -122,8 +122,8 @@ def teacher_dashboard():
     # reviews
     cursor.execute("""
     SELECT r.rating, r.review_text, r.created_at,
-           s.name AS student_name,
-           s.department AS student_department
+           s.department AS student_department,
+           s.batch AS student_batch   -- ✅ ADD THIS
     FROM reviews r
     LEFT JOIN students s ON r.student_id = s.id
     WHERE r.teacher_id = %s
