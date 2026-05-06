@@ -5,72 +5,103 @@
 
     <style>
         body {
-            font-family: Arial;
             margin: 0;
-            background: #f4f6f9;
+            font-family: 'Segoe UI', sans-serif;
+            background: #eef2f7;
         }
 
-        /* HEADER */
         .header {
-            background: #28a745;
+            background: linear-gradient(90deg, #28a745, #218838);
             color: white;
-            padding: 15px 20px;
+            padding: 15px 25px;
             display: flex;
             justify-content: space-between;
             align-items: center;
         }
 
-        .header h2 {
-            margin: 0;
-        }
-
         .logout-btn {
             background: white;
             color: #28a745;
-            padding: 8px 12px;
             border: none;
-            border-radius: 6px;
+            padding: 8px 14px;
+            border-radius: 8px;
             cursor: pointer;
             font-weight: bold;
         }
 
-        .logout-btn:hover {
-            background: #e6e6e6;
-        }
-
-        /* CONTAINER */
         .container {
-            padding: 20px;
+            padding: 25px;
         }
 
-        /* PROFILE CARD */
         .profile-card {
+            display: flex;
+            align-items: center;
+            gap: 20px;
             background: white;
             padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+            margin-bottom: 25px;
+        }
+
+        .profile-img {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid #28a745;
+        }
+
+        .badge {
+            background: #28a745;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+        }
+
+        /* NEW: Batch badge */
+        .batch-badge {
+            background: #6c757d;
+            color: white;
+            padding: 3px 8px;
             border-radius: 10px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
+            font-size: 12px;
+            margin-left: 6px;
         }
 
-        .profile-card p {
-            margin: 6px 0;
+        .card-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 20px;
         }
 
-        /* REVIEWS */
-        .reviews-title {
-            margin-bottom: 10px;
+        .dept-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: 0.3s;
+        }
+
+        .dept-card:hover {
+            transform: translateY(-6px);
+            background: #007bff;
+            color: white;
+        }
+
+        .review-section {
+            display: none;
         }
 
         .review-card {
             background: white;
-            padding: 15px;
-            border-radius: 10px;
+            padding: 18px;
+            border-radius: 12px;
             margin-bottom: 15px;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
-        }
-
-        .review-card p {
-            margin: 5px 0;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
 
         .rating {
@@ -78,25 +109,22 @@
             font-weight: bold;
         }
 
-        .date {
-            font-size: 12px;
-            color: gray;
-        }
-
-        .no-review {
-            background: white;
-            padding: 15px;
-            border-radius: 10px;
-            text-align: center;
-            color: gray;
+        .back-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-bottom: 15px;
         }
     </style>
 </head>
+
 <body>
 
-<!-- HEADER -->
 <div class="header">
-    <h2>Welcome ,{{ teacher.name }}</h2>
+    <h2>Teacher Dashboard</h2>
     <a href="/teacher/logout">
         <button class="logout-btn">Logout</button>
     </a>
@@ -106,33 +134,84 @@
 
     <!-- PROFILE -->
     <div class="profile-card">
-        <p><b>Department:</b> {{ teacher.department }}</p>
-        <p><b>Experience:</b> {{ teacher.experience }} years</p>
-        <p><b>Status:</b> {{ teacher.status }}</p>
+        <img src="{{ url_for('static', filename='images/' ~ teacher.image_url) }}" class="profile-img">
+
+        <div>
+            <h3>{{ teacher.name }}</h3>
+            <p>{{ teacher.department }} • {{ teacher.experience }} yrs experience</p>
+            <span class="badge">{{ teacher.status }}</span>
+        </div>
     </div>
 
-    <hr>
+    <!-- DEPARTMENTS -->
+    <div id="departmentView">
+        <h3>Select Department</h3>
+
+        <div class="card-container">
+            {% for dept in reviews | map(attribute='student_department') | unique %}
+                <div class="dept-card" onclick="showReviews('{{ dept }}')">
+                    {{ dept }}
+                </div>
+            {% endfor %}
+        </div>
+    </div>
 
     <!-- REVIEWS -->
-    <h3 class="reviews-title">Student Reviews</h3>
+    <div id="reviewView" class="review-section">
 
-    {% if reviews %}
-        {% for r in reviews %}
-            <div class="review-card">
-                <p><b>{{ r.student_name }}</b></p>
-                <p><b>Department:</b> {{ r.student_department }}</p>
-                <p class="rating">⭐ {{ r.rating }}/5</p>
-                <p>{{ r.review_text }}</p>
-                <p class="date">{{ r.created_at }}</p>
+        <button class="back-btn" onclick="goBack()">⬅ Back</button>
+
+        <h3 id="deptTitle"></h3>
+
+        {% for review in reviews %}
+            <div class="review-card" data-dept="{{ review.student_department }}">
+
+                <p class="rating">⭐ {{ review.rating }}</p>
+                <p>{{ review.review_text }}</p>
+
+                <!-- UPDATED WITH BATCH -->
+                <p>
+                    <strong>From:</strong>
+                    {{ review.student_department }}
+
+                    {% if review.student_batch %}
+                        <span class="batch-badge">
+                            Batch {{ review.student_batch }}
+                        </span>
+                    {% endif %}
+                </p>
+
+                <small>{{ review.created_at }}</small>
             </div>
         {% endfor %}
-    {% else %}
-        <div class="no-review">
-            No reviews yet
-        </div>
-    {% endif %}
+
+    </div>
 
 </div>
+
+<script>
+function showReviews(dept) {
+    document.getElementById("departmentView").style.display = "none";
+    document.getElementById("reviewView").style.display = "block";
+
+    document.getElementById("deptTitle").innerText = dept + " Department Reviews";
+
+    let cards = document.querySelectorAll(".review-card");
+
+    cards.forEach(card => {
+        if (card.getAttribute("data-dept") === dept) {
+            card.style.display = "block";
+        } else {
+            card.style.display = "none";
+        }
+    });
+}
+
+function goBack() {
+    document.getElementById("departmentView").style.display = "block";
+    document.getElementById("reviewView").style.display = "none";
+}
+</script>
 
 </body>
 </html>
