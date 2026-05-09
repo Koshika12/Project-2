@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, session, flash
 import mysql.connector
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
+import math
 from datetime import datetime, timedelta
 
 app = Flask(__name__)
@@ -104,7 +105,8 @@ def dashboard():
     cursor = db.cursor(dictionary=True)
 
     cursor.execute("""
-        SELECT t.id, t.name, t.department, t.image_url, t.admin_review, t.experience,
+        SELECT t.id, t.name, t.department, t.image_url,
+               t.admin_review, t.experience,
                r.rating
         FROM teachers t
         LEFT JOIN reviews r ON t.id = r.teacher_id
@@ -113,6 +115,7 @@ def dashboard():
     """)
 
     data = cursor.fetchall()
+
     cursor.close()
     db.close()
 
@@ -120,9 +123,11 @@ def dashboard():
     teachers_dict = {}
 
     for row in data:
+
         tid = row['id']
 
         if tid not in teachers_dict:
+
             teachers_dict[tid] = {
                 'id': tid,
                 'name': row['name'],
@@ -132,7 +137,8 @@ def dashboard():
                 'experience': row['experience'] or 0,
                 'reviews': [],
                 'avg_rating': 0,
-                'reviews_count': 0
+                'reviews_count': 0,
+                'score': 0
             }
 
         if row['rating'] is not None:
@@ -141,19 +147,32 @@ def dashboard():
     # ---------------- CALCULATE RATINGS ----------------
     teacher_list = list(teachers_dict.values())
 
+    alpha = 0.7
+    beta = 0.3
+
     for t in teacher_list:
+
         reviews = t['reviews']
         n = len(reviews)
 
         t['reviews_count'] = n
 
+        # Average Rating
         if n > 0:
             t['avg_rating'] = round(sum(reviews) / n, 1)
         else:
             t['avg_rating'] = 0
 
+        # Weighted Score Formula
+        t['score'] = round(
+            alpha * t['avg_rating']
+            + beta * math.log(1 + n),
+            2
+        )
+
     # ---------------- SEARCH FILTER ----------------
     if search_term:
+
         teacher_list = [
             t for t in teacher_list
             if search_term in t['name'].lower()
@@ -164,6 +183,7 @@ def dashboard():
     n = len(teacher_list)
 
     for i in range(n):
+
         for j in range(n - i - 1):
 
             a = teacher_list[j]
@@ -171,14 +191,18 @@ def dashboard():
 
             if (
                 (sort_by == 'alphabet' and a['name'] > b['name']) or
-                (sort_by == 'highest' and a['avg_rating'] < b['avg_rating']) or
-                (sort_by == 'lowest' and a['avg_rating'] > b['avg_rating']) or
+                (sort_by == 'highest' and a['score'] < b['score']) or
+                (sort_by == 'lowest' and a['score'] > b['score']) or
                 (sort_by == 'experience' and a['experience'] < b['experience'])
             ):
+
                 teacher_list[j], teacher_list[j + 1] = b, a
 
     # ---------------- TOP TEACHERS ----------------
-    top_teachers = [t for t in teacher_list if t['avg_rating'] >= 3]
+    top_teachers = [
+        t for t in teacher_list
+        if t['avg_rating'] >= 3
+    ]
 
     # ---------------- NORMALIZATION ----------------
     for t in teacher_list:
@@ -186,6 +210,7 @@ def dashboard():
         if not t['image_url'] or not os.path.isfile(
             os.path.join(app.root_path, 'static', 'images', t['image_url'])
         ):
+
             t['image_url'] = 'profile.png'
 
         if not t['admin_review'] or t['admin_review'].strip() == "":
@@ -194,12 +219,18 @@ def dashboard():
     # ---------------- METRICS ----------------
     total_teachers = len(teacher_list)
 
-    total_reviews = sum(t['reviews_count'] for t in teacher_list)
+    total_reviews = sum(
+        t['reviews_count'] for t in teacher_list
+    )
 
     avg_rating = (
         round(
-            sum(t['avg_rating'] for t in teacher_list if t['reviews_count'] > 0)
-            / total_teachers, 1
+            sum(
+                t['avg_rating']
+                for t in teacher_list
+                if t['reviews_count'] > 0
+            ) / total_teachers,
+            1
         )
         if total_teachers > 0 else 0
     )
@@ -419,7 +450,7 @@ def review_home():
         message="First select a teacher to give your review"
     )
 
-# ===================== REVIEW HISTORY =====================
+# =====================  HISTORY =====================
 @app.route('/history')
 def history():
     if 'student_id' not in session:
